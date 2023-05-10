@@ -8,18 +8,18 @@ metadata:
     repository: ""
     support: ""
     vendor: ""
-  name: boutique-cart-cpu-hog
+  name: boutique-cart-pod-delete
   version: ""
 packageInfo:
   experiments: null
   packageName: ""
 spec:
-  categoryDescription: It stress the cpu resouces of the pods belonging to the chart service of boutique application
+  categoryDescription: It delete the pod replica belonging to the chart service of boutique application
   chaosExpCRDLink: ""
   chaosType: ""
   displayName: boutique-cart-cpu-hog
   experiments:
-  - description: It stress the cpu resouces of the pods belonging to the chart service of boutique application
+  - description: It delete the pod replica belonging to the chart service of boutique application
     name: pod-cpu-hog
   keywords: []
   links: null
