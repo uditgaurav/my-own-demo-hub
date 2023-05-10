@@ -1,0 +1,32 @@
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChartServiceVersion
+metadata:
+  annotations:
+    categories: ""
+    chartDescription: ""
+    createdAt: ""
+    repository: ""
+    support: ""
+    vendor: ""
+  name: boutique-cart-cpu-hog
+  version: ""
+packageInfo:
+  experiments: null
+  packageName: ""
+spec:
+  categoryDescription: It stress the cpu resouces of the pods belonging to the chart service of boutique application
+  chaosExpCRDLink: ""
+  chaosType: ""
+  displayName: boutique-cart-cpu-hog
+  experiments:
+  - description: It stress the cpu resouces of the pods belonging to the chart service of boutique application
+    name: boutique-cart-cpu-hog
+  keywords: []
+  links: null
+  maintainers: null
+  maturity: ""
+  minKubeVersion: ""
+  platforms: null
+  provider:
+    name: ""
+  scenarios: null
