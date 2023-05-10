@@ -1,0 +1,311 @@
+kind: Workflow
+apiVersion: argoproj.io/v1alpha1
+metadata:
+  name: boutique-cart-cpu-hog-1683717492
+  namespace: litmus
+  creationTimestamp: null
+  labels:
+    cluster_id: 14cdbbba-7d24-4430-99b1-223a0a20cf31
+    subject: boutique-cart-cpu-hog_litmus
+    workflow_id: c2c23ced-aab1-486e-88ad-b2b1090ecaab
+    workflows.argoproj.io/controller-instanceid: 14cdbbba-7d24-4430-99b1-223a0a20cf31
+spec:
+  templates:
+    - name: custom-chaos
+      inputs: {}
+      outputs: {}
+      metadata: {}
+      steps:
+        - - name: install-chaos-experiments
+            template: install-chaos-experiments
+            arguments: {}
+        - - name: pod-cpu-hog-dkh
+            template: pod-cpu-hog-dkh
+            arguments: {}
+    - name: install-chaos-experiments
+      inputs:
+        artifacts:
+          - name: pod-cpu-hog-dkh
+            path: /tmp/pod-cpu-hog-dkh.yaml
+            raw:
+              data: >
+                apiVersion: litmuschaos.io/v1alpha1
+
+                description:
+                  message: |
+                    Injects cpu consumption on pods belonging to an app deployment
+                kind: ChaosExperiment
+
+                metadata:
+                  name: pod-cpu-hog
+                  labels:
+                    name: pod-cpu-hog
+                    app.kubernetes.io/part-of: litmus
+                    app.kubernetes.io/component: chaosexperiment
+                    app.kubernetes.io/version: 3.0.0-beta3
+                spec:
+                  definition:
+                    scope: Namespaced
+                    permissions:
+                      - apiGroups:
+                          - ""
+                        resources:
+                          - pods
+                        verbs:
+                          - create
+                          - delete
+                          - get
+                          - list
+                          - patch
+                          - update
+                          - deletecollection
+                      - apiGroups:
+                          - ""
+                        resources:
+                          - events
+                        verbs:
+                          - create
+                          - get
+                          - list
+                          - patch
+                          - update
+                      - apiGroups:
+                          - ""
+                        resources:
+                          - configmaps
+                        verbs:
+                          - get
+                          - list
+                      - apiGroups:
+                          - ""
+                        resources:
+                          - pods/log
+                        verbs:
+                          - get
+                          - list
+                          - watch
+                      - apiGroups:
+                          - ""
+                        resources:
+                          - pods/exec
+                        verbs:
+                          - get
+                          - list
+                          - create
+                      - apiGroups:
+                          - apps
+                        resources:
+                          - deployments
+                          - statefulsets
+                          - replicasets
+                          - daemonsets
+                        verbs:
+                          - list
+                          - get
+                      - apiGroups:
+                          - apps.openshift.io
+                        resources:
+                          - deploymentconfigs
+                        verbs:
+                          - list
+                          - get
+                      - apiGroups:
+                          - ""
+                        resources:
+                          - replicationcontrollers
+                        verbs:
+                          - get
+                          - list
+                      - apiGroups:
+                          - argoproj.io
+                        resources:
+                          - rollouts
+                        verbs:
+                          - list
+                          - get
+                      - apiGroups:
+                          - batch
+                        resources:
+                          - jobs
+                        verbs:
+                          - create
+                          - list
+                          - get
+                          - delete
+                          - deletecollection
+                      - apiGroups:
+                          - litmuschaos.io
+                        resources:
+                          - chaosengines
+                          - chaosexperiments
+                          - chaosresults
+                        verbs:
+                          - create
+                          - list
+                          - get
+                          - patch
+                          - update
+                          - delete
+                    image: litmuschaos/go-runner:3.0.0-beta3
+                    imagePullPolicy: Always
+                    args:
+                      - -c
+                      - ./experiments -name pod-cpu-hog
+                    command:
+                      - /bin/bash
+                    env:
+                      - name: TOTAL_CHAOS_DURATION
+                        value: "60"
+                      - name: CPU_CORES
+                        value: "1"
+                      - name: CPU_LOAD
+                        value: "100"
+                      - name: PODS_AFFECTED_PERC
+                        value: ""
+                      - name: RAMP_TIME
+                        value: ""
+                      - name: LIB_IMAGE
+                        value: litmuschaos/go-runner:3.0.0-beta3
+                      - name: STRESS_IMAGE
+                        value: alexeiled/stress-ng:latest-ubuntu
+                      - name: CONTAINER_RUNTIME
+                        value: docker
+                      - name: SOCKET_PATH
+                        value: /var/run/docker.sock
+                      - name: TARGET_PODS
+                        value: ""
+                      - name: NODE_LABEL
+                        value: ""
+                      - name: SEQUENCE
+                        value: parallel
+                    labels:
+                      name: pod-cpu-hog
+                      app.kubernetes.io/part-of: litmus
+                      app.kubernetes.io/component: experiment-job
+                      app.kubernetes.io/runtime-api-usage: "true"
+                      app.kubernetes.io/version: 3.0.0-beta3
+      outputs: {}
+      metadata: {}
+      container:
+        name: ""
+        image: litmuschaos/k8s:3.0.0-beta3
+        command:
+          - sh
+          - -c
+        args:
+          - kubectl apply -f /tmp/pod-cpu-hog-dkh.yaml -n
+            {{workflow.parameters.adminModeNamespace}} &&  sleep 30
+        resources: {}
+    - name: pod-cpu-hog-dkh
+      inputs:
+        artifacts:
+          - name: pod-cpu-hog-dkh
+            path: /tmp/chaosengine-pod-cpu-hog-dkh.yaml
+            raw:
+              data: |
+                apiVersion: litmuschaos.io/v1alpha1
+                kind: ChaosEngine
+                metadata:
+                  namespace: "{{workflow.parameters.adminModeNamespace}}"
+                  generateName: pod-cpu-hog-dkh
+                  labels:
+                    workflow_run_id: "{{workflow.uid}}"
+                spec:
+                  engineState: active
+                  appinfo:
+                    appns: boutique
+                    applabel: app=cartservice
+                    appkind: deployment
+                  chaosServiceAccount: litmus-admin
+                  experiments:
+                    - name: pod-cpu-hog
+                      spec:
+                        components:
+                          env:
+                            - name: TOTAL_CHAOS_DURATION
+                              value: "60"
+                            - name: CPU_CORES
+                              value: "1"
+                            - name: PODS_AFFECTED_PERC
+                              value: ""
+                            - name: CONTAINER_RUNTIME
+                              value: containerd
+                            - name: SOCKET_PATH
+                              value: /run/containerd/containerd.sock
+                            - name: DEFAULT_HEALTH_CHECK
+                              value: "false"
+                        probe:
+                          - name: cart-pods-check
+                            type: cmdProbe
+                            mode: Edge
+                            runProperties:
+                              probeTimeout: 180
+                              retry: 0
+                              interval: 1
+                              stopOnFailure: true
+                            cmdProbe/inputs:
+                              command: ./healthcheck -name pod-level
+                              source:
+                                image: chaosnative/go-runner:3.0.0-saas
+                                inheritInputs: true
+                              comparator:
+                                type: string
+                                criteria: contains
+                                value: "[P000]"
+                          - name: cart-svc-availability-check
+                            type: httpProbe
+                            mode: Continuous
+                            httpProbe/inputs:
+                              url: http://frontend.boutique.svc.cluster.local:80/cart
+                              insecureSkipVerify: false
+                              method:
+                                get:
+                                  criteria: ==
+                                  responseCode: "200"
+                            runProperties:
+                              probeTimeout: 2000
+                              interval: 5
+                              retry: 4
+                              probePollingInterval: 2
+                              initialDelaySeconds: 1
+                              stopOnFailure: false
+                          - name: website-latency-check
+                            type: promProbe
+                            mode: Edge
+                            promProbe/inputs:
+                              endpoint: http://34.135.47.19:9090/
+                              query: avg_over_time(probe_duration_seconds{job=\"prometheus-blackbox-exporter\",instance=\"frontend.boutique.svc.cluster.local:80\"}[60s:1s])*1000
+                              comparator:
+                                type: float
+                                criteria: <=
+                                value: "120"
+                            runProperties:
+                              probeTimeout: 5
+                              interval: 2
+                              retry: 2
+                              probePollingInterval: 1
+                              initialDelaySeconds: 1
+                              stopOnFailure: false
+      outputs: {}
+      metadata:
+        labels:
+          weight: "10"
+      container:
+        name: ""
+        image: litmuschaos/litmus-checker:3.0.0-beta3
+        args:
+          - -file=/tmp/chaosengine-pod-cpu-hog-dkh.yaml
+          - -saveName=/tmp/engine-name
+        resources: {}
+  entrypoint: custom-chaos
+  arguments:
+    parameters:
+      - name: adminModeNamespace
+        value: litmus
+  serviceAccountName: argo-chaos
+  securityContext:
+    runAsUser: 1000
+    runAsNonRoot: true
+status:
+  ? startedAt
+  ? finishedAt
